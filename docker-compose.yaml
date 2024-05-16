@@ -1,0 +1,392 @@
+volumes:
+  mongodbdata: {}
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+x-common-variables: &common-variables
+  MCC: "505"
+  MNC: "93"
+  MAX_NUM_UE: 1024
+  DB_URI: mongodb://mongo/open5gs
+  SMF_DNS1: 8.8.8.8
+  SMF_DNS2: 8.8.4.4
+  UE_IPV4_INTERNET_RANGE: 192.168.100.0/24
+  UE_IPV4_INTERNET_GATEWAY: 192.168.100.1
+  UE_IPV4_IMS_RANGE: 192.168.101.0/24
+  UE_IPV4_IMS_GATEWAY: 192.168.101.1
+  EPC_DOMAIN: epc.mnc93.mcc505.3gppnetwork.org
+  PCRF_BIND_PORT: 3873
+
+services:
+  mongo:
+    image: open5gs_mongo
+    build: ./component/open5gs/mongo
+    command: --bind_ip 0.0.0.0
+    volumes:
+      - mongodbdata:/data/db
+      - mongodbdata:/data/configdb
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      <<: *common-variables
+    expose:
+      - "27017/udp"
+      - "27017/tcp"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongo:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  webui:
+    image: open5gs_webui
+    build: ./component/open5gs/webui
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      <<: *common-variables
+    expose:
+      - "9999/tcp"
+    ports:
+      - "9999:9999/tcp"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  
+  # base: 
+  #   image: open5gs_base
+  #   build: ./component/open5gs/base
+  
+  nrf:
+    image: open5gs_nrf
+    build: ./component/open5gs/nrf
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: nrf
+    volumes:
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "80/tcp"
+  
+  scp:
+    image: open5gs_scp
+    build: ./component/open5gs/scp
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: scp
+    volumes:
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "80/tcp"
+    depends_on:
+      - nrf
+    
+  ausf:
+    image: open5gs_ausf
+    build: ./component/open5gs/ausf
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: ausf
+    volumes:
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "80/tcp"
+    depends_on:
+      - nrf
+      - scp
+  
+  udr:
+    image: open5gs_udr
+    build: ./component/open5gs/udr
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: udr
+    volumes:
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "80/tcp"
+    depends_on:
+      nrf:
+        condition: service_started
+      scp:
+        condition: service_started
+      mongo:
+          condition: service_healthy
+
+  udm:
+    image: open5gs_udm
+    build: ./component/open5gs/udm
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: udm
+    volumes:
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "80/tcp"
+    depends_on:
+      - nrf
+      - scp
+
+  pcf:
+    image: open5gs_pcf
+    build: ./component/open5gs/pcf
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: pcf
+    volumes:
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "80/tcp"
+      - "9091/tcp"
+    depends_on:
+      nrf:
+        condition: service_started
+      scp:
+        condition: service_started
+      mongo:
+          condition: service_healthy
+
+  bsf:
+    image: open5gs_bsf
+    build: ./component/open5gs/bsf
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: bsf
+    volumes:
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "80/tcp"
+    depends_on:
+      nrf:
+        condition: service_started
+      scp:
+        condition: service_started
+      mongo:
+          condition: service_healthy
+
+  nssf:
+    image: open5gs_nssf
+    build: ./component/open5gs/nssf
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: nssf
+    volumes:
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "80/tcp"
+    depends_on:
+      - nrf
+      - scp
+
+  amf:
+    image: open5gs_amf
+    build: ./component/open5gs/amf
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: amf
+    volumes:
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "80/tcp"
+      - "9091/tcp"
+      - "38412/sctp"
+    depends_on:
+      - nrf
+      - scp
+      - ausf
+      - udm
+      - udr
+      - pcf
+      - bsf
+      - nssf
+
+  smf:
+    image: open5gs_smf
+    build: ./component/open5gs/smf
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: smf
+    volumes:
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "3868/udp"
+      - "3868/tcp"
+      - "3868/sctp"
+      - "5868/udp"
+      - "5868/tcp"
+      - "5868/sctp"
+      - "8805/udp"
+      - "2123/udp"
+      - "80/tcp"
+      - "9091/tcp"
+    depends_on:
+      - nrf
+      - scp
+      - amf
+
+  upf:
+    image: open5gs_upf
+    build: ./component/open5gs/upf
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: upf
+    volumes:
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "2152/udp"
+      - "8805/udp"
+      - "9091/tcp"
+    depends_on:
+      - nrf
+      - scp
+      - smf
+    cap_add:
+      - NET_ADMIN
+    privileged: true
+    sysctls:
+      - net.ipv4.ip_forward=1
+      
+  metrics:
+    image: open5gs_metrics
+    build: ./component/open5gs/metrics
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "9090/tcp"
+    ports:
+      - "9090:9090/tcp"
+  
+  grafana:
+    image: open5gs_grafana
+    build: ./component/open5gs/grafana
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "3000/tcp"
+    ports:
+      - "3000:3000/tcp"
+  
+  gnb_zmq:
+    image: srsran_gnb
+    build: ./component/srsran/gnb
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: gnb_zmq
+    volumes:
+      - ./log:/mnt/srsran
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "38412/sctp"
+      - "2152/udp"
+      - "2000/tcp"
+      - "2001/tcp"
+    depends_on:
+      - amf
+      - ric
+      - webui
+      - metrics
+      - gnuradio
+      - grafana
+    privileged: true
+    stdin_open: true
+    tty: true
+    networks:
+      default:
+        ipv4_address: 172.30.0.100
+
+  ue_zmq:
+    image: srsran_ue
+    build: ./component/srsran/ue
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: ue_5g_zmq
+      UE_IMSI: "505930000000001"
+      UE_KI: "AABBCCDDEEFF11223344556677889901"
+      UE_OP: "11223344556677889900AABBCCDDEEFF"
+    volumes:
+      - ./log:/mnt/srslte
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "2000/tcp"
+      - "2001/tcp"
+    depends_on:
+      - gnb_zmq
+      - upf
+    cap_add:
+      - NET_ADMIN
+    privileged: true
+    stdin_open: true
+    tty: true
+    networks:
+      default:
+        ipv4_address: 172.30.0.101
+  
+  gnuradio:
+    image: gnuradio
+    build: ./component/gnuradio
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 4000:3000
+  
+  ric:
+    image: oran_ric
+    build: ./component/oran/ric
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - 34661
+      - 34662
+    networks:
+      default:
+        ipv4_address: 172.30.0.200
+  
+  xapp:
+    image: oran_xapp
+    build: ./component/oran/xapp
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - ric
+      - ue_zmq
+
+    #dbctl.sh add_by_OP 505930000000001 AABBCCDDEEFF11223344556677889901 11223344556677889900AABBCCDDEEFF

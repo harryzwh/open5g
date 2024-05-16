@@ -1,0 +1,15 @@
+diff --git a/lib/e2/e2sm/e2sm_kpm/e2sm_kpm_report_service_impl.cpp b/lib/e2/e2sm/e2sm_kpm/e2sm_kpm_report_service_impl.cpp
+index f56757380..466b287c3 100644
+--- a/lib/e2/e2sm/e2sm_kpm/e2sm_kpm_report_service_impl.cpp
++++ b/lib/e2/e2sm/e2sm_kpm/e2sm_kpm_report_service_impl.cpp
+@@ -144,8 +144,8 @@ void e2sm_kpm_report_service_style1::clear_collect_measurements()
+ bool e2sm_kpm_report_service_style1::collect_measurements()
+ {
+   // Set the granularity period.
+-  ric_ind_message.granul_period_present = true;
+-  ric_ind_message.granul_period         = granul_period;
++  ric_ind_message.granul_period_present = false;
++  //ric_ind_message.granul_period         = granul_period;
+ 
+   // Fill indication msg.
+   std::vector<meas_record_item_c> meas_records_items;

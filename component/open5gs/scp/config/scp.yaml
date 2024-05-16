@@ -1,0 +1,22 @@
+logger:
+    file: 
+        path: /open5gs/install/var/log/open5gs/scp.log
+
+sbi:
+    server:
+      no_tls: true
+    client:
+      no_tls: true
+
+global:
+  max:
+    ue: $MAX_NUM_UE
+
+scp:
+    sbi:
+      server:
+        - address: scp
+          port: 80
+      client:
+        nrf:
+          - uri: http://nrf:80

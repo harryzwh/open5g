@@ -1,0 +1,30 @@
+# db_uri: mongodb://MONGO_IP/open5gs
+
+logger:
+    file: 
+        path: /open5gs/install/var/log/open5gs/pcf.log
+
+sbi:
+    server:
+      no_tls: true
+    client:
+      no_tls: true
+
+global:
+  max:
+    ue: $MAX_NUM_UE
+
+pcf:
+    sbi:
+      server:
+        - address: pcf
+          port: 80
+      client:
+        nrf:
+          - uri: http://nrf:80
+        scp:
+          - uri: http://scp:80
+    metrics:
+      server:
+        - address: pcf
+          port: 9091
