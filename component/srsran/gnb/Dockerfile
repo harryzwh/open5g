@@ -12,10 +12,7 @@ RUN add-apt-repository ppa:ettusresearch/uhd && \
 
 ENV UHD_IMAGES_DIR=/usr/share/uhd/images/
 
-COPY ./patch.patch /patch.patch
-
-RUN git clone --depth=1 https://github.com/srsran/srsRAN_Project.git && cd srsRAN_Project && \
-    cp /patch.patch ./ && git apply patch.patch && \
+RUN git clone --depth=1 -b OPS_KPM https://github.com/harryzwh/srsRAN_Project.git && cd srsRAN_Project && \
     mkdir build && cd build && \
     cmake ../ -DENABLE_EXPORT=ON -DENABLE_ZEROMQ=ON && make -j`nproc` && make install && ldconfig
 

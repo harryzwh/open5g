@@ -303,6 +303,8 @@ services:
     environment:
       <<: *common-variables
       COMPONENT_NAME: gnb_zmq
+      ZMQ_RX_IP: "172.30.0.201"
+      # ZMQ_RX_IP: "172.30.0.101"
     volumes:
       - ./log:/mnt/srsran
       - /etc/timezone:/etc/timezone:ro
@@ -311,13 +313,17 @@ services:
       - "38412/sctp"
       - "2152/udp"
       - "2000/tcp"
-      - "2001/tcp"
+    healthcheck:
+      test: netstat -ltn | grep -c ":2000"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     depends_on:
       - amf
       - ric
       - webui
       - metrics
-      - gnuradio
       - grafana
     privileged: true
     stdin_open: true
@@ -326,7 +332,35 @@ services:
       default:
         ipv4_address: 172.30.0.100
 
-  ue_zmq:
+  # ue_zmq:
+  #   image: srsran_ue
+  #   build: ./component/srsran/ue
+  #   environment:
+  #     <<: *common-variables
+  #     COMPONENT_NAME: ue_5g_zmq
+  #     UE_IMSI: "505930000000001"
+  #     UE_KI: "AABBCCDDEEFF11223344556677889901"
+  #     UE_OP: "11223344556677889900AABBCCDDEEFF"
+  #     ZMQ_RX_IP: "172.30.0.100"
+  #   volumes:
+  #     - ./log:/mnt/srslte
+  #     - /etc/timezone:/etc/timezone:ro
+  #     - /etc/localtime:/etc/localtime:ro
+  #   expose:
+  #     - "2000/tcp"
+  #   depends_on:
+  #     - gnb_zmq
+  #     - upf
+  #   cap_add:
+  #     - NET_ADMIN
+  #   privileged: true
+  #   stdin_open: true
+  #   tty: true
+  #   networks:
+  #     default:
+  #       ipv4_address: 172.30.0.101
+
+  ue_zmq_1:
     image: srsran_ue
     build: ./component/srsran/ue
     environment:
@@ -335,13 +369,21 @@ services:
       UE_IMSI: "505930000000001"
       UE_KI: "AABBCCDDEEFF11223344556677889901"
       UE_OP: "11223344556677889900AABBCCDDEEFF"
+      IMEI: "354721886708893"
+      ZMQ_RX_IP: "172.30.0.201"
+      UE_IDX: 1
     volumes:
       - ./log:/mnt/srslte
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     expose:
       - "2000/tcp"
-      - "2001/tcp"
+    healthcheck:
+      test: netstat -ltn | grep -c ":2000"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     depends_on:
       - gnb_zmq
       - upf
@@ -354,17 +396,97 @@ services:
       default:
         ipv4_address: 172.30.0.101
   
+  ue_zmq_2:
+    image: srsran_ue
+    build: ./component/srsran/ue
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: ue_5g_zmq
+      UE_IMSI: "505930000000002"
+      UE_KI: "AABBCCDDEEFF11223344556677889902"
+      UE_OP: "11223344556677889900AABBCCDDEEFF"
+      IMEI: "354721880592608"
+      ZMQ_RX_IP: "172.30.0.201"
+      UE_IDX: 2
+    volumes:
+      - ./log:/mnt/srslte
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "2000/tcp"
+    healthcheck:
+      test: netstat -ltn | grep -c ":2000"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    depends_on:
+      - gnb_zmq
+      - upf
+    cap_add:
+      - NET_ADMIN
+    privileged: true
+    stdin_open: true
+    tty: true
+    networks:
+      default:
+        ipv4_address: 172.30.0.102
+  
+  ue_zmq_3:
+    image: srsran_ue
+    build: ./component/srsran/ue
+    environment:
+      <<: *common-variables
+      COMPONENT_NAME: ue_5g_zmq
+      UE_IMSI: "505930000000003"
+      UE_KI: "AABBCCDDEEFF11223344556677889903"
+      UE_OP: "11223344556677889900AABBCCDDEEFF"
+      IMEI: "354721881968112"
+      ZMQ_RX_IP: "172.30.0.201"
+      UE_IDX: 3
+    volumes:
+      - ./log:/mnt/srslte
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "2000/tcp"
+    healthcheck:
+      test: netstat -ltn | grep -c ":2000"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    depends_on:
+      - gnb_zmq
+      - upf
+    cap_add:
+      - NET_ADMIN
+    privileged: true
+    stdin_open: true
+    tty: true
+    networks:
+      default:
+        ipv4_address: 172.30.0.103
+  
   gnuradio:
     image: gnuradio
-    build: ./component/gnuradio
+    build: ./component/gnuradio/headless
     environment:
       - PUID=1000
       - PGID=1000
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "2000-2010"
     ports:
       - 4000:3000
+    depends_on:
+      gnb_zmq:
+          condition: service_healthy
+    networks:
+        default:
+          ipv4_address: 172.30.0.201
   
   ric:
     image: oran_ric
@@ -375,6 +497,7 @@ services:
     expose:
       - 34661
       - 34662
+    tty: true
     networks:
       default:
         ipv4_address: 172.30.0.200
@@ -387,6 +510,16 @@ services:
       - /etc/localtime:/etc/localtime:ro
     depends_on:
       - ric
-      - ue_zmq
+    tty: true
 
     #dbctl.sh add_by_OP 505930000000001 AABBCCDDEEFF11223344556677889901 11223344556677889900AABBCCDDEEFF
+    # 354721886708893
+    # 354721880592608
+    # 354721881968112
+    # 354721888174508
+    # 354721884469951
+    # 354721887317157
+    # 354721882259669
+    # 354721887637323
+    # 354721880680205
+    # 354721880928844

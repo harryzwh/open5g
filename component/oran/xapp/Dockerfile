@@ -4,10 +4,15 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 COPY ./sources.list /etc/apt/sources.list
 
-RUN apt update && apt install -y swig libsctp-dev python3 cmake-curses-gui python3-dev pkg-config libconfig-dev libconfig++-dev
+RUN apt update && apt install -y libsctp-dev python3 cmake-curses-gui python3-dev pkg-config libconfig-dev libconfig++-dev bison
 
+RUN cd /
+RUN git clone --depth=1 -b v4.1.1 https://github.com/swig/swig.git && cd swig && \
+    ./autogen.sh && ./configure --prefix=/usr/ && make && make install
+
+RUN cd /
 RUN git clone --depth=1 -b br-flexric https://gitlab.eurecom.fr/mosaic5g/flexric.git && cd flexric && \
-    mkdir build && cd build && cmake -DKPM_VERSION=KPM_V3 -DXAPP_DB=NONE_XAPP ../ && make && make install
+    mkdir build && cd build && cmake -DKPM_VERSION=KPM_V3 -DXAPP_DB=NONE_XAPP XAPP_PYTHON_SWIG=ON ../ && make && make install
 
 FROM ubuntu:jammy-20240427
 
@@ -54,4 +59,14 @@ CMD ["./c/xapp_oran_moni", "-c", "/usr/local/etc/flexric/xapp_mon_e2sm_kpm.conf"
     # -- Installing: /usr/local/bin/flexric/xApp/c/xapp_cust_moni
     # -- Installing: /usr/local/bin/flexric/xApp/c/xapp_oran_moni
     # -- Installing: /usr/local/bin/flexric/xApp/c/xapp_slice_moni_ctrl
+    # -- Installing: /usr/local/lib/python3/dist-packages/xapp_sdk/xapp_sdk.py
+    # -- Installing: /usr/local/lib/python3/dist-packages/xapp_sdk/_xapp_sdk.so
+    # -- Installing: /usr/local/lib/python3/dist-packages/monitor/xapp_all_moni.py
+    # -- Installing: /usr/local/lib/python3/dist-packages/monitor/xapp_oran_moni.py
+    # -- Installing: /usr/local/lib/python3/dist-packages/monitor/xapp_cust_moni.py
+    # -- Installing: /usr/local/lib/python3/dist-packages/control/xapp_slice_moni_ctrl.py
+    # -- Installing: /usr/local/lib/python3/dist-packages/interactive/xapp.py
+    # -- Installing: /usr/local/lib/libe42_xapp_shared.so
+
+    #/usr/share/swig
     

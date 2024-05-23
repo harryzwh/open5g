@@ -57,7 +57,7 @@ ENV UHD_IMAGES_DIR=/usr/share/uhd/images/
 #RUN apt-get update && apt-get install -y gdb libdw-dev
 
 # Get srsLTE, compile and install
-RUN git clone --depth=1 -b release_23_11 https://github.com/srsran/srsRAN_4G.git && cd srsRAN_4G && \
+RUN git clone --depth=1 https://github.com/harryzwh/srsRAN_4G.git && cd srsRAN_4G && \
     mkdir build && cd build && \
     cmake ../ && make -j`nproc` && make install && ldconfig
 

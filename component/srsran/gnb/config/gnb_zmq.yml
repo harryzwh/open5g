@@ -4,7 +4,9 @@ amf:
 
 ru_sdr:
   device_driver: zmq                                                                          # The RF driver name.
-  device_args: tx_port=tcp://$GNB_IP:2000,rx_port=tcp://$UE_IP:2001,base_srate=23.04e6  # Optionally pass arguments to the selected RF driver.
+  # device_args: tx_port=tcp://$GNB_IP:2000,rx_port=tcp://$UE_IP:2001,base_srate=23.04e6  # Optionally pass arguments to the selected RF driver.
+  # device_args: tx_port=tcp://$GNB_IP:2000,rx_port=tcp://172.30.0.201:2100,base_srate=23.04e6  # Optionally pass arguments to the selected RF driver.
+  device_args: tx_port=tcp://$GNB_IP:2000,rx_port=tcp://$ZMQ_RX_IP:2000,base_srate=23.04e6
   srate: 23.04                                                                                # RF sample rate might need to be adjusted according to selected bandwidth.
   tx_gain: 75                                                                                 # Transmit gain of the RF might need to adjusted to the given situation.
   rx_gain: 75                                                                                 # Receive gain of the RF might need to adjusted to the given situation.
@@ -26,6 +28,7 @@ cell_cfg:
       coreset0_index: 13
   prach:
     prach_config_index: 1
+    total_nof_ra_preambles: 63
 
 log:
   filename: /mnt/srsran/gnb.log                                                               # Path of the log file.

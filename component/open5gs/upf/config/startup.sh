@@ -32,6 +32,8 @@ cp /mnt/config/${COMPONENT_NAME}.yaml install/etc/open5gs
 python3 /mnt/config/tun_if.py --tun_ifname ogstun --ipv4_range $UE_IPV4_INTERNET_RANGE --ipv6_range 2001:230:cafe::/48
 python3 /mnt/config/tun_if.py --tun_ifname ogstun2 --ipv4_range $UE_IPV4_IMS_RANGE --ipv6_range 2001:230:babe::/48 --nat_rule 'no'
 
+iperf -s --bind $UE_IPV4_INTERNET_GATEWAY -D
+
 for var in $(env | awk -F '=' '{print $1}') 
 do 
 	sed -i 's|$'$var'|'${!var}'|g' /open5gs/install/etc/open5gs/${COMPONENT_NAME}.yaml 2>/dev/null

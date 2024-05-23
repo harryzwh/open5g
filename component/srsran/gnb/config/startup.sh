@@ -28,8 +28,9 @@
 
 # export GNB_IP=$(ping -c1 gnb_zmq | sed -nE 's/^PING[^(]+\(([^)]+)\).*/\1/p')
 # export UE_IP=$(ping -c1 ue_zmq | sed -nE 's/^PING[^(]+\(([^)]+)\).*/\1/p')
-export GNB_IP="172.30.0.100"
-export UE_IP="172.30.0.101"
+# export GNB_IP="172.30.0.100"
+# export UE_IP="172.30.0.101"
+export GNB_IP=$(grep "$HOSTNAME" /etc/hosts|awk '{print $1}')
 
 mkdir /etc/srsran
 cp /mnt/config/${COMPONENT_NAME}.yml /etc/srsran/gnb.yml

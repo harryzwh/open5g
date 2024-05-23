@@ -28,8 +28,12 @@
 
 # export GNB_IP=$(ping -c1 gnb_zmq | sed -nE 's/^PING[^(]+\(([^)]+)\).*/\1/p')
 # export UE_IP=$(ping -c1 ue_zmq | sed -nE 's/^PING[^(]+\(([^)]+)\).*/\1/p')
-export GNB_IP="172.30.0.100"
-export UE_IP="172.30.0.101"
+# export GNB_IP="172.30.0.100"
+# export UE_IP="172.30.0.101"
+export UE_IP=$(grep "$HOSTNAME" /etc/hosts|awk '{print $1}')
+export RX_PORT_BASE=2000
+export RX_PORT_OFFSET=${UE_IDX-0}
+export RX_PORT=`expr $RX_PORT_BASE + $RX_PORT_OFFSET`
 
 # mkdir /etc/srsran
 cp /mnt/config/${COMPONENT_NAME}.conf /etc/srsran/ue.conf
