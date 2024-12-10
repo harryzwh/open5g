@@ -5,4 +5,4 @@ for img in $(docker compose config | awk '{if ($1 == "image:") print $2;}'); do
 done
 echo $images
 
-docker save -o services.img $images
+docker save $images | gzip > service.tar.gz

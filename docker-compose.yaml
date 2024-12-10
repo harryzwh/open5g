@@ -369,7 +369,6 @@ services:
       UE_IMSI: "505930000000001"
       UE_KI: "AABBCCDDEEFF11223344556677889901"
       UE_OP: "11223344556677889900AABBCCDDEEFF"
-      IMEI: "354721886708893"
       ZMQ_RX_IP: "172.30.0.201"
       UE_IDX: 1
     volumes:
@@ -405,7 +404,6 @@ services:
       UE_IMSI: "505930000000002"
       UE_KI: "AABBCCDDEEFF11223344556677889902"
       UE_OP: "11223344556677889900AABBCCDDEEFF"
-      IMEI: "354721880592608"
       ZMQ_RX_IP: "172.30.0.201"
       UE_IDX: 2
     volumes:
@@ -441,7 +439,6 @@ services:
       UE_IMSI: "505930000000003"
       UE_KI: "AABBCCDDEEFF11223344556677889903"
       UE_OP: "11223344556677889900AABBCCDDEEFF"
-      IMEI: "354721881968112"
       ZMQ_RX_IP: "172.30.0.201"
       UE_IDX: 3
     volumes:
@@ -495,14 +492,26 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     expose:
-      - 34661
-      - 34662
+      - "36421/sctp"
+      - "36422/sctp"
+    #ports:
+    #  - "36422:36422/sctp"
     tty: true
     networks:
       default:
         ipv4_address: 172.30.0.200
   
   xapp:
+    image: oran_xapp
+    build: ./component/oran/xapp
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - ric
+    tty: true
+  
+  xapp2:
     image: oran_xapp
     build: ./component/oran/xapp
     volumes:
